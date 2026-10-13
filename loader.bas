@@ -1,15 +1,8 @@
 Attribute VB_Name = "loader"
-Option Explicit
-
 Public Sub UpdatePayrollModules()
 	On Error GoTo UpdateFailed
 
-	Dim moduleFile As String
-	Dim moduleName As String
-	Dim modulePath As String
-	Dim components As Object
-	Dim errorMessage As String
-	Const MODULE_FOLDER As String = "C:\repositories\payroll"
+	Const MODULE_FOLDER = "C:\repositories\payroll"
 
 	Set components = ThisWorkbook.VBProject.VBComponents
 
@@ -24,8 +17,7 @@ Public Sub UpdatePayrollModules()
 	Loop
 
 	ThisWorkbook.Save
-	Application.OnTime Now + TimeSerial(0, 0, 1), _
-		"'" & ThisWorkbook.Name & "'!RefreshFunctionDescriptions"
+	Application.OnTime Now + TimeSerial(0, 0, 1), "'" & ThisWorkbook.Name & "'!RefreshFunctionDescriptions"
 	Exit Sub
 
 UpdateFailed:
@@ -37,14 +29,6 @@ End Sub
 
 Public Sub RefreshFunctionDescriptions()
 	On Error GoTo RegistrationFailed
-
-	Dim component As Object
-	Dim lineNumber As Long
-	Dim openingParen As Long
-	Dim spacePosition As Long
-	Dim codeLine As String
-	Dim signature As String
-	Dim procedureName As String
 
 	For Each component In ThisWorkbook.VBProject.VBComponents
 		For lineNumber = 1 To component.CodeModule.CountOfLines
@@ -79,11 +63,6 @@ End Sub
 
 Private Sub ReplaceStandardModule(ByVal components As Object, _
 	ByVal moduleName As String, ByVal modulePath As String)
-
-	Dim componentIndex As Long
-	Dim component As Object
-	Dim componentName As String
-	Dim suffix As String
 
 	For componentIndex = components.Count To 1 Step -1
 		Set component = components.Item(componentIndex)
