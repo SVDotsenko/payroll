@@ -16,19 +16,24 @@ This project contains Excel automation files for calculating taxes and other pay
 
 ## Using the VBA Module in Excel
 
-You only need to do this once. It creates a ready-to-use payroll workbook on your Desktop.
+You only need to set this up once per workbook. After that, the workbook downloads the latest payroll modules from GitHub every time it opens.
 
-1. Close Excel.
-2. Press `Win+R`, paste the following line and press **Enter**:
+1. Download [`loader.bas`](https://github.com/SVDotsenko/payroll/blob/main/loader.bas): open the link and click **Download raw file**. Make sure the saved file is named `loader.bas`, not `loader.bas.txt`.
+2. In Excel, go to **File > Options > Trust Center > Trust Center Settings... > Macro Settings** and tick **Trust access to the VBA project object model**. The loader needs this to update the modules.
+3. Open your workbook in the desktop version of Excel and press `Alt+F11` to open the Visual Basic Editor.
+4. Select **File > Import File...** and import the downloaded `loader.bas`.
+5. In the **Project** pane, double-click **ThisWorkbook** and paste this code:
 
+   ```vba
+   Private Sub Workbook_Open()
+       UpdatePayrollModules
+   End Sub
    ```
-   powershell -ExecutionPolicy Bypass -c "& ([scriptblock]::Create((irm https://raw.githubusercontent.com/SVDotsenko/payroll/main/setup.ps1)))"
-   ```
 
-3. Wait for the message **The payroll workbook has been saved to your Desktop**.
-4. Open `Payroll.xlsm` from your Desktop and click **Enable Content** when Excel asks about macros.
+6. Close the editor and save the workbook as an Excel Macro-Enabled Workbook (`.xlsm`).
+7. Close the workbook, then open it again and enable macros when prompted. The `PRSI` and `USC` modules are downloaded and the function descriptions are registered automatically. In Excel's Insert Function wizard, the functions appear under the `payroll` category.
 
-Every time the workbook opens, it downloads the latest payroll functions automatically, so it needs an internet connection. In Excel's Insert Function wizard, the functions appear under the `payroll` category.
+The workbook needs an internet connection when it opens so it can fetch updates.
 
 Use the functions in worksheet formulas, for example:
 - `=PRSI_Subclass(A2,52)` returns the PRSI subclass for the pay in cell `A2`.
