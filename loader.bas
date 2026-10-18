@@ -17,7 +17,10 @@ Public Sub UpdatePayrollModules()
 		If modulePaths Is Nothing Then
 			' Offline: keep the current modules and skip the update silently.
 			For Each component In components
-				If component.Type = 1 And StrComp(component.Name, "loader", vbTextCompare) <> 0 Then Exit Sub
+				If component.Type = 1 And StrComp(component.Name, "loader", vbTextCompare) <> 0 Then
+					ShowUpdateStatus "Payroll modules were not updated: no internet connection. Using the current version."
+					Exit Sub
+				End If
 			Next component
 			' Nothing to fall back to on the very first open, so the user has to be told.
 			Err.Raise vbObjectError + 3, , "The payroll functions could not be downloaded. " & _
@@ -34,10 +37,13 @@ Public Sub UpdatePayrollModules()
 
 	ThisWorkbook.Save
 	Application.OnTime Now + TimeSerial(0, 0, 1), "'" & ThisWorkbook.Name & "'!RefreshFunctionDescriptions"
+	If useLocalFolder Then source = "the local folder" Else source = "GitHub"
+	ShowUpdateStatus "Payroll modules updated from " & source & " (" & modulePaths.Count & " modules)."
 	Exit Sub
 
 UpdateFailed:
 	errorMessage = Err.Description
+	ShowUpdateStatus "Payroll module update failed."
 	MsgBox "Payroll module update failed: " & errorMessage & vbCrLf & _
 		"The workbook may have partially updated modules in memory. Check the VBA project before saving.", _
 		vbExclamation, "Payroll module updater"
@@ -75,6 +81,16 @@ Public Sub RefreshFunctionDescriptions()
 RegistrationFailed:
 	MsgBox "The modules were imported, but a function description could not be registered: " & _
 		Err.Description, vbExclamation, "Payroll module updater"
+End Sub
+
+' Shows the update result in the status bar for 5 seconds.
+Private Sub ShowUpdateStatus(ByVal message As String)
+	Application.StatusBar = message
+	Application.OnTime Now + TimeSerial(0, 0, 5), "'" & ThisWorkbook.Name & "'!ClearUpdateStatus"
+End Sub
+
+Public Sub ClearUpdateStatus()
+	Application.StatusBar = False
 End Sub
 
 Private Sub ReplaceStandardModule(ByVal components As Object, _
