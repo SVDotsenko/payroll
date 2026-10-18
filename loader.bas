@@ -83,10 +83,25 @@ RegistrationFailed:
 		Err.Description, vbExclamation, "Payroll module updater"
 End Sub
 
-' Shows the update result in the status bar for 5 seconds.
+' Blinks the update result in the status bar to draw attention, then keeps it for 5 seconds.
 Private Sub ShowUpdateStatus(ByVal message As String)
+	For blinkIndex = 1 To 5
+		Application.StatusBar = message
+		WaitWithoutFreezing 0.5
+		' A space hides the text; False would flash Excel's "Ready" instead.
+		Application.StatusBar = " "
+		WaitWithoutFreezing 0.3
+	Next blinkIndex
+
 	Application.StatusBar = message
 	Application.OnTime Now + TimeSerial(0, 0, 5), "'" & ThisWorkbook.Name & "'!ClearUpdateStatus"
+End Sub
+
+Private Sub WaitWithoutFreezing(ByVal seconds As Single)
+	startTime = Timer
+	Do While Timer - startTime < seconds
+		DoEvents
+	Loop
 End Sub
 
 Public Sub ClearUpdateStatus()
