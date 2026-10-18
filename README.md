@@ -49,7 +49,9 @@ If `Payroll.xlsm` already exists on your Desktop, the script stops without chang
 
 ### Using the functions
 
-The workbook needs an internet connection when it opens so it can fetch updates.
+When the workbook opens with an internet connection, it automatically updates the payroll functions to the latest version. Without an internet connection you can still use the workbook as usual, but the functions may not be the latest version.
+
+The very first time a new workbook is opened, an internet connection is required, because that is when the functions are downloaded for the first time. If there is no connection, Excel shows a message; connect to the internet and open the workbook again.
 
 Use the functions in worksheet formulas, for example:
 - `=PRSI_Subclass(A2,52)` returns the PRSI subclass for the pay in cell `A2`.

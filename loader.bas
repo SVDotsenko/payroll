@@ -13,11 +13,16 @@ Public Sub UpdatePayrollModules()
 	If useLocalFolder Then
 		Set modulePaths = GetLocalModulePaths()
 	Else
-		' Download every module first so a network failure leaves the project untouched.
-		Set modulePaths = New Collection
-		For Each moduleFile In GetRemoteModuleNames()
-			modulePaths.Add DownloadModule(moduleFile)
-		Next moduleFile
+		Set modulePaths = DownloadRemoteModules()
+		If modulePaths Is Nothing Then
+			' Offline: keep the current modules and skip the update silently.
+			For Each component In components
+				If component.Type = 1 And StrComp(component.Name, "loader", vbTextCompare) <> 0 Then Exit Sub
+			Next component
+			' Nothing to fall back to on the very first open, so the user has to be told.
+			Err.Raise vbObjectError + 3, , "The payroll functions could not be downloaded. " & _
+				"Check the internet connection and reopen the workbook."
+		End If
 	End If
 
 	For Each modulePath In modulePaths
@@ -104,6 +109,28 @@ Private Function GetLocalModulePaths() As Collection
 
 	If modulePaths.Count = 0 Then Err.Raise vbObjectError + 1, , "No modules found in " & LOCAL_MODULE_FOLDER
 	Set GetLocalModulePaths = modulePaths
+End Function
+
+' Downloads every module before any import, so a network failure leaves the project untouched.
+' Returns Nothing when the modules could not be downloaded.
+Private Function DownloadRemoteModules() As Collection
+	On Error GoTo DownloadFailed
+
+	Set modulePaths = New Collection
+	For Each moduleFile In GetRemoteModuleNames()
+		modulePaths.Add DownloadModule(moduleFile)
+	Next moduleFile
+
+	Set DownloadRemoteModules = modulePaths
+	Exit Function
+
+DownloadFailed:
+	Resume DiscardDownloads
+DiscardDownloads:
+	On Error Resume Next
+	For Each modulePath In modulePaths
+		Kill modulePath
+	Next modulePath
 End Function
 
 Private Function GetRemoteModuleNames() As Collection
