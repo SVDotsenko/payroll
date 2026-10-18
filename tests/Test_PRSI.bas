@@ -1,6 +1,7 @@
 Attribute VB_Name = "Test_PRSI"
 ' Tests for the PRSI module. Requires TestHelpers.
-' Expected values come from "PRSI 2026 Contribution Rates and User Guide", table "Earnings bands and subclasses".
+' Expected values come from "PRSI 2026 Contribution Rates and User Guide":
+' subclasses from the table "Earnings bands and subclasses", AX charges from the table on page 3.
 ' Run RunPRSITests (Alt+F8 or F5 in the VBA editor) and check the Immediate window.
 
 Sub RunPRSITests()
@@ -9,6 +10,7 @@ Sub RunPRSITests()
     Test_PRSI_Subclass_Fortnightly
     Test_PRSI_Subclass_Monthly
     Test_PRSI_Subclass_DefaultFrequency
+    Test_PRSI_Charge_AX_Table
     EndTests
 End Sub
 
@@ -64,6 +66,31 @@ Private Sub Test_PRSI_Subclass_DefaultFrequency()
     AssertEqual "A1", PRSI_Subclass(552.01), "PRSI_Subclass(552.01) without frequency"
     ' 1000 is A0 monthly but A1 weekly, so this shows the weekly bands were used
     CheckSubclass 1000, 4, "A1"
+End Sub
+
+' Weekly AX charges from the guide's table "Class A PRSI charge for gross earnings between 352.01 and 424" (page 3).
+' Charge = Round(GrossPay * 4.2%, 2) - Round(12 - (GrossPay - 352.01) / 6, 2).
+Private Sub Test_PRSI_Charge_AX_Table()
+    CheckCharge 352.01, 52, 2.78       ' AX lower bound: maximum credit of 12
+    CheckCharge 355, 52, 3.41
+    CheckCharge 360, 52, 4.45
+    CheckCharge 365, 52, 5.49          ' Credit 9.835 rounds up to 9.84
+    CheckCharge 370, 52, 6.54
+    CheckCharge 375, 52, 7.58
+    CheckCharge 380, 52, 8.62          ' Credit 7.335 rounds up to 7.34
+    CheckCharge 385, 52, 9.67
+    CheckCharge 390, 52, 10.71
+    CheckCharge 395, 52, 11.75         ' Table says 11.76, but it uses 16.60 for 395 * 4.2% = 16.59
+    CheckCharge 400, 52, 12.8
+    CheckCharge 405, 52, 13.84
+    CheckCharge 410, 52, 14.88         ' Credit 2.335 rounds up to 2.34
+    CheckCharge 415, 52, 15.93
+    CheckCharge 420, 52, 16.97
+    CheckCharge 424, 52, 17.81         ' AX upper bound: table says 17.80, but 424 * 4.2% = 17.808 rounds to 17.81
+End Sub
+
+Private Sub CheckCharge(ByVal grossPay As Double, ByVal payFrequency, ByVal expected As Double)
+    AssertNear expected, PRSI_Charge(grossPay, payFrequency), "PRSI_Charge(" & grossPay & ", " & payFrequency & ")"
 End Sub
 
 Private Sub CheckSubclass(ByVal grossPay As Double, ByVal payFrequency, ByVal expected As String)

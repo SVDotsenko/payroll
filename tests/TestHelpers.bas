@@ -15,11 +15,29 @@ Sub BeginTests()
 End Sub
 
 ' Prints the summary and returns the number of failed assertions (0 means all passed).
+' All passed: reports in a message box. Any failures: opens the Immediate window with the details.
 Function EndTests() As Long
-    Debug.Print "Passed: " & passedCount & ", failed: " & failedCount & _
-        IIf(failedCount = 0, "  -> OK", "  -> FAILED")
+    Debug.Print "Passed: " & passedCount & ", failed: " & failedCount & IIf(failedCount = 0, "  -> OK", "  -> FAILED")
+    If failedCount = 0 Then
+        MsgBox "All " & passedCount & " tests passed.", vbInformation, "Tests"
+    Else
+        ShowImmediateWindow
+    End If
     EndTests = failedCount
 End Function
+
+' Opens the VBA editor with the Immediate window so the results are visible after a run started from Excel.
+' Needs "Trust access to the VBA project object model"; without it the results are still printed, just not shown.
+Private Sub ShowImmediateWindow()
+    On Error Resume Next
+    Application.VBE.MainWindow.Visible = True
+    For Each vbeWindow In Application.VBE.Windows
+        If vbeWindow.Type = 5 Then ' 5 = vbext_wt_Immediate; the caption is localized, the type is not
+            vbeWindow.Visible = True
+            vbeWindow.SetFocus
+        End If
+    Next vbeWindow
+End Sub
 
 ' Exact comparison: use for strings, integers and other non-monetary values.
 ' Numbers are compared by value regardless of their type (0 equals 0#); a number never equals a string.
@@ -46,8 +64,7 @@ End Sub
 
 ' Comparison with a tolerance: use for money and other Double results.
 ' The default tolerance of half a cent accepts any value that rounds to the same cent.
-Sub AssertNear(ByVal expected As Double, ByVal actual, ByVal testName As String, _
-               Optional ByVal tolerance As Double = 0.005)
+Sub AssertNear(ByVal expected As Double, ByVal actual, ByVal testName As String, Optional ByVal tolerance As Double = 0.005)
     If Not IsNumber(actual) Then
         RecordFail testName, "expected " & Describe(expected) & ", got non-numeric " & Describe(actual)
     ElseIf Abs(expected - actual) <= tolerance Then
