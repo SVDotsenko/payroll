@@ -95,5 +95,24 @@ try {
 	Remove-Item -Path $tempLoader -ErrorAction SilentlyContinue
 }
 
-[void][Windows.Forms.MessageBox]::Show("The payroll workbook has been saved to your Desktop:`r`n`r`n$Path",
-	'Payroll setup', 'OK', 'Information')
+# Windows toast notification (WinRT is only available in PowerShell 5.1).
+try {
+	# Register our own app ID so the toast header shows "Payroll setup" instead of a raw ID.
+	$appId = 'PayrollSetup'
+	$appKey = "HKCU:\Software\Classes\AppUserModelId\$appId"
+	[void](New-Item -Path $appKey -Force)
+	[void](New-ItemProperty -Path $appKey -Name DisplayName -Value 'Payroll setup' -PropertyType String -Force)
+
+	[void][Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications, ContentType = WindowsRuntime]
+	$toastXml = [Windows.UI.Notifications.ToastNotificationManager]::GetTemplateContent(
+		[Windows.UI.Notifications.ToastTemplateType]::ToastText01)
+	$textNode = $toastXml.GetElementsByTagName('text').Item(0)
+	[void]$textNode.AppendChild($toastXml.CreateTextNode("The payroll workbook has been saved to your Desktop: $Path"))
+	[Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier($appId).Show(
+		[Windows.UI.Notifications.ToastNotification]::new($toastXml))
+}
+catch {
+	# Fallback when toasts are unavailable: a dialog that closes itself after 3 seconds (64 = information icon).
+	[void](New-Object -ComObject WScript.Shell).Popup("The payroll workbook has been saved to your Desktop:`r`n`r`n$Path",
+		3, 'Payroll setup', 64)
+}
