@@ -17,22 +17,31 @@ Sub BeginTests()
 End Sub
 
 ' Prints the summary and returns the number of failed assertions (0 means all passed).
-' All passed: reports in a message box that offers to open the Immediate window.
-' Any failures: opens the Immediate window with the details.
+' All passed: announces it and shows a popup that offers to open the Immediate window; the popup closes itself after 3 seconds.
+' Any failures: announces it and opens the Immediate window with the details.
 ' Expected failures do not count as failed.
 Function EndTests() As Long
     Debug.Print "Passed: " & passedCount & ", failed: " & failedCount & _
         ", expected failures: " & expectedFailureCount & IIf(failedCount = 0, "  -> OK", "  -> FAILED")
     If failedCount = 0 Then
-        answer = MsgBox("All " & passedCount & " tests passed." & _
+        Announce "All tests passed."
+        ' Popup returns 6 for Yes, 7 for No and -1 when it times out; 4 + 64 + 256 = Yes/No + information icon + No as default
+        answer = CreateObject("WScript.Shell").Popup("All " & passedCount & " tests passed." & _
             IIf(expectedFailureCount > 0, vbCrLf & "Expected failures: " & expectedFailureCount & " (details in the Immediate window).", "") & _
-            vbCrLf & vbCrLf & "Open the Immediate window?", vbYesNo + vbInformation + vbDefaultButton2, "Tests")
-        If answer = vbYes Then ShowImmediateWindow
+            vbCrLf & vbCrLf & "Open the Immediate window?", 3, "Tests", 4 + 64 + 256)
+        If answer = 6 Then ShowImmediateWindow
     Else
+        Announce "Some tests failed. See the Immediate window for details."
         ShowImmediateWindow
     End If
     EndTests = failedCount
 End Function
+
+' Speaks the text without waiting for it to finish; a missing speech engine is not a test failure.
+Private Sub Announce(ByVal text As String)
+    On Error Resume Next
+    Application.Speech.Speak text, SpeakAsync:=True
+End Sub
 
 ' Opens the VBA editor with the Immediate window so the results are visible after a run started from Excel.
 ' Needs "Trust access to the VBA project object model"; without it the results are still printed, just not shown.

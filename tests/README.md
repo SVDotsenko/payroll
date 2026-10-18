@@ -38,8 +38,8 @@ End Sub
 
 `EndTests` prints a summary such as `Passed: 53, failed: 0, expected failures: 3` to the Immediate window. It then does one of two things:
 
-- If all tests passed, it shows a message box asking whether to open the Immediate window. **No** is the default button.
-- If any test failed, it opens the VBA editor with the Immediate window, which lists every `FAIL:` line.
+- If all tests passed, it says "All tests passed" aloud and shows a popup asking whether to open the Immediate window. **No** is the default button, and the popup closes by itself after 3 seconds.
+- If any test failed, it says so aloud and opens the VBA editor with the Immediate window, which lists every `FAIL:` line.
 
 ## Running the tests
 
@@ -55,7 +55,7 @@ When the repository is cloned to `C:\repositories\payroll`, the loader imports t
 2. Select **File > Import File...** and import `TestHelpers.bas`.
 3. Repeat for the test modules you need, for example `Test_PRSI.bas`.
 4. Run the test procedure, for example `RunPRSITests`. Either put the cursor inside it and press `F5`, or press `Alt+F8` in Excel and choose it from the list.
-5. Read the result in the message box or in the Immediate window (`Ctrl+G` in the editor).
+5. Read the result in the popup or in the Immediate window (`Ctrl+G` in the editor).
 
 To update a test module after changing it, remove the old module first: right-click it in the **Project** pane and choose **Remove**, answering **No** when asked to export it. Then import the file again. Otherwise the VBA editor imports it as a second copy named, for example, `Test_PRSI1`.
 
