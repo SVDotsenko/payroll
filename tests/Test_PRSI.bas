@@ -11,6 +11,7 @@ Sub RunPRSITests()
     Test_PRSI_Subclass_Monthly
     Test_PRSI_Subclass_DefaultFrequency
     Test_PRSI_Charge_AX_Table
+    Test_PRSI_Charge_GuideDiscrepancies
     EndTests
 End Sub
 
@@ -87,6 +88,17 @@ Private Sub Test_PRSI_Charge_AX_Table()
     CheckCharge 415, 52, 15.93
     CheckCharge 420, 52, 16.97
     CheckCharge 424, 52, 17.81         ' AX upper bound: table says 17.80, but 424 * 4.2% = 17.808 rounds to 17.81
+End Sub
+
+' Values printed in the guide that the code deliberately does not reproduce (expected failures).
+' The code follows the method of the page 3 table: the credit is rounded as a whole, not its one-sixth part.
+Private Sub Test_PRSI_Charge_GuideDiscrepancies()
+    AssertExpectedFailure 8, PRSI_Charge(377, 52), "PRSI_Charge(377, 52) worked example on page 2", _
+        "the example rounds one-sixth first (12 - 4.17 = 7.83); the table method gives a credit of 7.84 and 7.99"
+    AssertExpectedFailure 11.76, PRSI_Charge(395, 52), "PRSI_Charge(395, 52) page 3 table", _
+        "the table uses 16.60 for 395 * 4.2%, which is 16.59"
+    AssertExpectedFailure 17.8, PRSI_Charge(424, 52), "PRSI_Charge(424, 52) page 3 table", _
+        "the table gives 17.80 for 424 * 4.2% = 17.808, which rounds to 17.81"
 End Sub
 
 Private Sub CheckCharge(ByVal grossPay As Double, ByVal payFrequency, ByVal expected As Double)

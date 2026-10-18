@@ -6,20 +6,28 @@ Option Private Module
 
 Private passedCount As Long
 Private failedCount As Long
+Private expectedFailureCount As Long
 
 Sub BeginTests()
     passedCount = 0
     failedCount = 0
+    expectedFailureCount = 0
     Debug.Print String(60, "-")
     Debug.Print "Tests started " & Format$(Now, "yyyy-mm-dd hh:nn:ss")
 End Sub
 
 ' Prints the summary and returns the number of failed assertions (0 means all passed).
-' All passed: reports in a message box. Any failures: opens the Immediate window with the details.
+' All passed: reports in a message box that offers to open the Immediate window.
+' Any failures: opens the Immediate window with the details.
+' Expected failures do not count as failed.
 Function EndTests() As Long
-    Debug.Print "Passed: " & passedCount & ", failed: " & failedCount & IIf(failedCount = 0, "  -> OK", "  -> FAILED")
+    Debug.Print "Passed: " & passedCount & ", failed: " & failedCount & _
+        ", expected failures: " & expectedFailureCount & IIf(failedCount = 0, "  -> OK", "  -> FAILED")
     If failedCount = 0 Then
-        MsgBox "All " & passedCount & " tests passed.", vbInformation, "Tests"
+        answer = MsgBox("All " & passedCount & " tests passed." & _
+            IIf(expectedFailureCount > 0, vbCrLf & "Expected failures: " & expectedFailureCount & " (details in the Immediate window).", "") & _
+            vbCrLf & vbCrLf & "Open the Immediate window?", vbYesNo + vbInformation + vbDefaultButton2, "Tests")
+        If answer = vbYes Then ShowImmediateWindow
     Else
         ShowImmediateWindow
     End If
@@ -42,24 +50,11 @@ End Sub
 ' Exact comparison: use for strings, integers and other non-monetary values.
 ' Numbers are compared by value regardless of their type (0 equals 0#); a number never equals a string.
 Sub AssertEqual(ByVal expected, ByVal actual, ByVal testName As String)
-    On Error GoTo NotComparable
-    If IsNumber(expected) And IsNumber(actual) Then
-        isEqual = (expected = actual)
-    ElseIf VarType(expected) = VarType(actual) And Not IsObject(expected) And Not IsArray(expected) Then
-        isEqual = (expected = actual)
-    Else
-        isEqual = False
-    End If
-
-    If isEqual Then
+    If IsSameValue(expected, actual, 0) Then
         RecordPass
     Else
         RecordFail testName, "expected " & Describe(expected) & ", got " & Describe(actual)
     End If
-    Exit Sub
-
-NotComparable:
-    RecordFail testName, "values cannot be compared: expected " & Describe(expected) & ", got " & Describe(actual)
 End Sub
 
 ' Comparison with a tolerance: use for money and other Double results.
@@ -83,6 +78,22 @@ Sub AssertTrue(ByVal condition As Boolean, ByVal testName As String)
     End If
 End Sub
 
+' Known discrepancy (xfail): the code is known to return something other than expected, for a stated reason.
+' A mismatch is counted as an expected failure, not as failed. A match is reported as FAIL (XPASS),
+' because the known problem has gone and this assertion should become a normal one.
+' Numbers are compared with a half-cent tolerance by default, everything else exactly.
+Sub AssertExpectedFailure(ByVal expected, ByVal actual, ByVal testName As String, ByVal reason As String, _
+                          Optional ByVal tolerance As Double = 0.005)
+    If IsSameValue(expected, actual, tolerance) Then
+        RecordFail testName, "XPASS: expected a failure (" & reason & "), but got " & Describe(actual) & _
+            "; turn this into a normal assertion"
+    Else
+        expectedFailureCount = expectedFailureCount + 1
+        Debug.Print "XFAIL: " & testName & ": expected " & Describe(expected) & ", got " & Describe(actual) & _
+            " (" & reason & ")"
+    End If
+End Sub
+
 Private Sub RecordPass()
     passedCount = passedCount + 1
 End Sub
@@ -91,6 +102,18 @@ Private Sub RecordFail(ByVal testName As String, ByVal message As String)
     failedCount = failedCount + 1
     Debug.Print "FAIL: " & testName & ": " & message
 End Sub
+
+' Numbers are compared by value regardless of their type (0 equals 0#), within the tolerance;
+' other values must have the same type; a number never equals a string.
+Private Function IsSameValue(ByVal expected, ByVal actual, ByVal tolerance As Double) As Boolean
+    On Error GoTo NotComparable
+    If IsNumber(expected) And IsNumber(actual) Then
+        IsSameValue = (Abs(expected - actual) <= tolerance)
+    ElseIf VarType(expected) = VarType(actual) And Not IsObject(expected) And Not IsArray(expected) Then
+        IsSameValue = (expected = actual)
+    End If
+NotComparable:
+End Function
 
 ' True only for real numeric types; unlike IsNumeric, rejects numeric strings and Empty.
 Private Function IsNumber(ByVal value) As Boolean
