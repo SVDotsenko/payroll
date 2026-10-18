@@ -108,6 +108,14 @@ Private Function GetLocalModulePaths() As Collection
 	Loop
 
 	If modulePaths.Count = 0 Then Err.Raise vbObjectError + 1, , "No modules found in " & LOCAL_MODULE_FOLDER
+
+	' Tests are loaded only from the local repository; GitHub users never get them.
+	moduleFile = Dir$(LOCAL_MODULE_FOLDER & "\tests\*.bas")
+	Do While Len(moduleFile) > 0
+		modulePaths.Add LOCAL_MODULE_FOLDER & "\tests\" & moduleFile
+		moduleFile = Dir$
+	Loop
+
 	Set GetLocalModulePaths = modulePaths
 End Function
 
