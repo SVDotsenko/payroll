@@ -51,11 +51,12 @@ When the repository is cloned to `C:\repositories\payroll`, the loader imports t
 
 ### In any workbook (manual)
 
-1. Open the workbook in desktop Excel and press `Alt+F11` to open the Visual Basic Editor. The workbook must already contain the modules under test, for example `PRSI`.
-2. Select **File > Import File...** and import `TestHelpers.bas`.
-3. Repeat for the test modules you need, for example `Test_PRSI.bas`.
-4. Run the test procedure, for example `RunPRSITests`. Either put the cursor inside it and press `F5`, or press `Alt+F8` in Excel and choose it from the list.
-5. Read the result in the popup or in the Immediate window (`Ctrl+G` in the editor).
+1. Download [`TestHelpers.bas`](https://github.com/SVDotsenko/payroll/blob/main/tests/TestHelpers.bas) and the test modules you need, for example [`Test_PRSI.bas`](https://github.com/SVDotsenko/payroll/blob/main/tests/Test_PRSI.bas). Open each link and click **Download raw file**. Make sure the saved files keep the `.bas` extension, for example `TestHelpers.bas`, not `TestHelpers.bas.txt`.
+2. Open the workbook in desktop Excel and press `Alt+F11` to open the Visual Basic Editor. The workbook must already contain the modules under test, for example `PRSI`.
+3. Select **File > Import File...** and import `TestHelpers.bas`.
+4. Repeat for the test modules you downloaded, for example `Test_PRSI.bas`.
+5. Run the test procedure, for example `RunPRSITests`. Either put the cursor inside it and press `F5`, or press `Alt+F8` in Excel and choose it from the list.
+6. Read the result in the popup or in the Immediate window (`Ctrl+G` in the editor).
 
 To update a test module after changing it, remove the old module first: right-click it in the **Project** pane and choose **Remove**, answering **No** when asked to export it. Then import the file again. Otherwise the VBA editor imports it as a second copy named, for example, `Test_PRSI1`.
 
