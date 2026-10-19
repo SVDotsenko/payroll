@@ -16,7 +16,7 @@ This project contains Excel automation files for calculating taxes and other pay
 
 ## Using the VBA Module in Excel
 
-You only need to set this up once per workbook. After that, the workbook downloads the latest payroll modules from GitHub every time it opens. Choose one of the two options below.
+You only need to set this up once per workbook. After that, the workbook downloads the latest payroll modules from GitHub every time it opens. Choose one of the three options below.
 
 ### Option 1: Set up the workbook manually
 
@@ -46,6 +46,23 @@ This option creates a new, ready-to-use workbook on your Desktop and turns on th
 5. Open `Payroll.xlsm` from your Desktop and click **Enable Content** when Excel asks about macros. The `PRSI` and `USC` modules are downloaded and the function descriptions are registered automatically.
 
 If `Payroll.xlsm` already exists on your Desktop, the script stops without changing it. Rename or move the existing file and run the script again.
+
+### Option 3: Run `setup.ps1` directly from GitHub
+
+This option does the same as Option 2, but you don't need to download any file, and Windows does not show the security warning.
+
+1. Close Excel.
+2. Open the **Start** menu, type `PowerShell`, and open **Windows PowerShell**.
+3. Paste this command and press `Enter`:
+
+   ```powershell
+   irm https://raw.githubusercontent.com/SVDotsenko/payroll/main/setup.ps1 | iex
+   ```
+
+4. Wait for the message **The payroll workbook has been saved to your Desktop**, then close the PowerShell window.
+5. Open `Payroll.xlsm` from your Desktop and click **Enable Content** when Excel asks about macros. The `PRSI` and `USC` modules are downloaded and the function descriptions are registered automatically.
+
+As with Option 2, if `Payroll.xlsm` already exists on your Desktop, the script stops without changing it.
 
 ### Using the functions
 

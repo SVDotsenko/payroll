@@ -104,7 +104,7 @@ Private Sub WaitWithoutFreezing(ByVal seconds As Single)
 	Loop
 End Sub
 
-Public Sub ClearUpdateStatus()
+Private Sub ClearUpdateStatus()
 	Application.StatusBar = False
 End Sub
 
