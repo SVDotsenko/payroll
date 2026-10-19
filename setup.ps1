@@ -95,8 +95,13 @@ try {
 	Remove-Item -Path $tempLoader -ErrorAction SilentlyContinue
 }
 
-# Windows toast notification (WinRT is only available in PowerShell 5.1).
-try {
+# Windows toast notification. WinRT types are only available in Windows PowerShell 5.1,
+# so under PowerShell 7 (e.g. when started via "irm ... | iex") the toast is shown by a 5.1 child process.
+$showToast = {
+	param([string]$message)
+	$ErrorActionPreference = 'Stop'
+	$ProgressPreference = 'SilentlyContinue'
+
 	# Register our own app ID so the toast header shows "Payroll setup" instead of a raw ID.
 	$appId = 'PayrollSetup'
 	$appKey = "HKCU:\Software\Classes\AppUserModelId\$appId"
@@ -107,9 +112,22 @@ try {
 	$toastXml = [Windows.UI.Notifications.ToastNotificationManager]::GetTemplateContent(
 		[Windows.UI.Notifications.ToastTemplateType]::ToastText01)
 	$textNode = $toastXml.GetElementsByTagName('text').Item(0)
-	[void]$textNode.AppendChild($toastXml.CreateTextNode("The payroll workbook has been saved to your Desktop: $Path"))
+	[void]$textNode.AppendChild($toastXml.CreateTextNode($message))
 	[Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier($appId).Show(
 		[Windows.UI.Notifications.ToastNotification]::new($toastXml))
+}
+
+try {
+	$toastMessage = "The payroll workbook has been saved to your Desktop: $Path"
+	if ($PSVersionTable.PSEdition -eq 'Core') {
+		$windowsPowerShell = Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powershell.exe'
+		& $windowsPowerShell -NoProfile -NonInteractive -Command $showToast -args $toastMessage
+		if ($LASTEXITCODE -ne 0) {
+			throw "Windows PowerShell could not show the toast (exit code $LASTEXITCODE)."
+		}
+	} else {
+		& $showToast $toastMessage
+	}
 }
 catch {
 	# Fallback when toasts are unavailable: a dialog that closes itself after 3 seconds (64 = information icon).
