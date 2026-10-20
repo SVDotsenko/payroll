@@ -29,27 +29,24 @@ Function PRSI_Subclass(GrossPay As Double, Optional PayFrequency = 52) As String
 Attribute PRSI_Subclass.VB_Description = "Returns the Class A PRSI subclass (M, A0, AX, AL, A1). Rates and thresholds as of 30 September 2026."
 Attribute PRSI_Subclass.VB_ProcData.VB_Invoke_Func = " \n20"
     If GrossPay = 0 Then
-        PRSI_Subclass = "M" ' No pay means nil contribution liability (Class M)
+        PRSI_Subclass = "M"'No pay means nil contribution liability (Class M)
         Exit Function
     End If
 
-    ' Column index: 0 = weekly, 1 = fortnightly, 2 = monthly
-    Select Case PayFrequency
+    Select Case PayFrequency'Column index: 0 = weekly, 1 = fortnightly, 2 = monthly
         Case 26: col = 1
         Case 12: col = 2
         Case Else: col = 0
     End Select
 
-    minPay = Array(38, 76, 165)(col)
-    If GrossPay < minPay Then Exit Function ' Below the Class A threshold (this would be Class J)
+    If GrossPay < Array(38, 76, 165)(col) Then Exit Function'Below the Class A threshold (this would be Class J)
 
-    ' Upper limit of each subclass by frequency: weekly, fortnightly, monthly
-    Set maxPay = CreateObject("Scripting.Dictionary")
+    Set maxPay = CreateObject("Scripting.Dictionary")'Upper limit of each subclass by frequency: weekly, fortnightly, monthly
     maxPay("A0") = Array(352, 704, 1525)
     maxPay("AX") = Array(424, 848, 1837)
     maxPay("AL") = Array(552, 1104, 2392)
 
-    For Each code In maxPay.Keys ' Dictionary keeps insertion order
+    For Each code In maxPay.Keys'Dictionary keeps insertion order
         If GrossPay <= maxPay(code)(col) Then
             PRSI_Subclass = code
             Exit Function
