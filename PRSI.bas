@@ -28,37 +28,34 @@ End Sub
 Function PRSI_Subclass(GrossPay As Double, Optional PayFrequency = 52) As String
 Attribute PRSI_Subclass.VB_Description = "Returns the Class A PRSI subclass (M, A0, AX, AL, A1). Rates and thresholds as of 30 September 2026."
 Attribute PRSI_Subclass.VB_ProcData.VB_Invoke_Func = " \n20"
-    minPay = 38
-    a0Max = 352
-    axMax = 424
-    alMax = 552
-
-    Select Case PayFrequency
-        Case 12 ' Monthly
-            minPay = 165
-            a0Max = 1525
-            axMax = 1837
-            alMax = 2392
-        Case 26 ' Fortnightly
-            minPay = 76
-            a0Max = 704
-            axMax = 848
-            alMax = 1104
-    End Select
-
     If GrossPay = 0 Then
         PRSI_Subclass = "M" ' No pay means nil contribution liability (Class M)
-    ElseIf GrossPay < minPay Then
-        PRSI_Subclass = "" ' Below the Class A threshold (this would be Class J)
-    ElseIf GrossPay <= a0Max Then
-        PRSI_Subclass = "A0"
-    ElseIf GrossPay <= axMax Then
-        PRSI_Subclass = "AX"
-    ElseIf GrossPay <= alMax Then
-        PRSI_Subclass = "AL"
-    Else
-        PRSI_Subclass = "A1"
+        Exit Function
     End If
+
+    ' Column index: 0 = weekly, 1 = fortnightly, 2 = monthly
+    Select Case PayFrequency
+        Case 26: col = 1
+        Case 12: col = 2
+        Case Else: col = 0
+    End Select
+
+    minPay = Array(38, 76, 165)(col)
+    If GrossPay < minPay Then Exit Function ' Below the Class A threshold (this would be Class J)
+
+    ' Upper limit of each subclass by frequency: weekly, fortnightly, monthly
+    Set maxPay = CreateObject("Scripting.Dictionary")
+    maxPay("A0") = Array(352, 704, 1525)
+    maxPay("AX") = Array(424, 848, 1837)
+    maxPay("AL") = Array(552, 1104, 2392)
+
+    For Each code In maxPay.Keys ' Dictionary keeps insertion order
+        If GrossPay <= maxPay(code)(col) Then
+            PRSI_Subclass = code
+            Exit Function
+        End If
+    Next
+    PRSI_Subclass = "A1"
 End Function
 
 Function PRSI_Charge(GrossPay As Double, Optional PayFrequency = 52)
