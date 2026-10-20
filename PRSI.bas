@@ -32,7 +32,7 @@ Attribute PRSI_Subclass.VB_ProcData.VB_Invoke_Func = " \n20"
     a0Max = 352
     axMax = 424
     alMax = 552
-    
+
     Select Case PayFrequency
         Case 12 ' Monthly
             minPay = 165
@@ -95,8 +95,7 @@ Private Function PRSI_Credit(GrossPay As Double, PayFrequency) As Double
     If weeklyCredit < 0 Then weeklyCredit = 0
     If weeklyCredit > MAX_CREDIT_WEEKLY Then weeklyCredit = MAX_CREDIT_WEEKLY
 
-    weeklyCredit = Application.WorksheetFunction.Round(weeklyCredit, 2)
-    PRSI_Credit = weeklyCredit * weeksPerPeriod
+    PRSI_Credit =  weeksPerPeriod * Application.WorksheetFunction.Round(weeklyCredit, 2)
 End Function
 Function PRSI_ChargeSteps(GrossPay As Double, Optional PayFrequency = 52) As String
 Attribute PRSI_ChargeSteps.VB_Description = "Returns a step-by-step explanation of the Employee PRSI charge for Class A as text, one step per line. The last step equals the PRSI_Charge result. Rates as of 30 September 2026."
