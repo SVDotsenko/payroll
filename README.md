@@ -16,9 +16,42 @@ This project contains Excel automation files for calculating taxes and other pay
 
 ## Using the VBA Module in Excel
 
-You only need to set this up once per workbook. After that, the workbook downloads the latest payroll modules from GitHub every time it opens. Choose one of the three options below.
+You only need to set this up once per workbook. After that, the workbook downloads the latest payroll modules from GitHub every time it opens. The three options below are listed from simplest to most involved. Start with Option 1; if something does not work, try the next option.
 
-### Option 1: Set up the workbook manually
+### Option 1: Run `setup.ps1` directly from GitHub
+
+This option creates a new, ready-to-use workbook on your Desktop and turns on the required Excel setting for you. You don't need to download any file, and Windows does not show a security warning.
+
+1. Close Excel.
+2. Open the **Start** menu, type `PowerShell`, and open **Windows PowerShell**.
+3. Paste this command and press `Enter`:
+
+   ```powershell
+   irm https://raw.githubusercontent.com/SVDotsenko/payroll/main/setup.ps1 | iex
+   ```
+
+4. Wait for the message **The payroll workbook has been saved to your Desktop**, then close the PowerShell window.
+5. Open `Payroll.xlsm` from your Desktop and click **Enable Content** when Excel asks about macros. The `PRSI` and `USC` modules are downloaded and the function descriptions are registered automatically.
+
+If `Payroll.xlsm` already exists on your Desktop, the script stops without changing it. Rename or move the existing file and run the script again.
+
+If this option does not work, try Option 2.
+
+### Option 2: Create the workbook automatically with `setup.ps1`
+
+This option does the same as Option 1, but you download the script file first and run it from your computer.
+
+1. Download [`setup.ps1`](https://github.com/SVDotsenko/payroll/blob/main/setup.ps1): open the link and click **Download raw file**. Make sure the saved file is named `setup.ps1`, not `setup.ps1.txt`.
+2. Close Excel.
+3. Right-click the downloaded `setup.ps1` and select **Run with PowerShell**. If Windows shows a security warning about a file downloaded from the internet, clear the **Always ask before opening this file** checkbox and then click **Open**. If the checkbox stays ticked, nothing happens and the workbook is not created.
+4. Wait for the message **The payroll workbook has been saved to your Desktop**.
+5. Open `Payroll.xlsm` from your Desktop and click **Enable Content** when Excel asks about macros. The `PRSI` and `USC` modules are downloaded and the function descriptions are registered automatically.
+
+As with Option 1, if `Payroll.xlsm` already exists on your Desktop, the script stops without changing it.
+
+If this option does not work either, set up the workbook manually with Option 3.
+
+### Option 3: Set up the workbook manually
 
 1. Download [`loader.bas`](https://github.com/SVDotsenko/payroll/blob/main/loader.bas): open the link and click **Download raw file**. Make sure the saved file is named `loader.bas`, not `loader.bas.txt`.
 2. In Excel, go to **File > Options > Trust Center > Trust Center Settings... > Macro Settings** and tick **Trust access to the VBA project object model**. The loader needs this to update the modules.
@@ -34,35 +67,6 @@ You only need to set this up once per workbook. After that, the workbook downloa
 
 6. Close the editor and save the workbook as an Excel Macro-Enabled Workbook (`.xlsm`).
 7. Close the workbook, then open it again and enable macros when prompted. The `PRSI` and `USC` modules are downloaded and the function descriptions are registered automatically. In Excel's Insert Function wizard, the functions appear under the `payroll` category.
-
-### Option 2: Create the workbook automatically with `setup.ps1`
-
-This option creates a new, ready-to-use workbook on your Desktop and turns on the required Excel setting for you.
-
-1. Download [`setup.ps1`](https://github.com/SVDotsenko/payroll/blob/main/setup.ps1): open the link and click **Download raw file**. Make sure the saved file is named `setup.ps1`, not `setup.ps1.txt`.
-2. Close Excel.
-3. Right-click the downloaded `setup.ps1` and select **Run with PowerShell**. If Windows shows a security warning about a file downloaded from the internet, clear the **Always ask before opening this file** checkbox and then click **Open**. If the checkbox stays ticked, nothing happens and the workbook is not created.
-4. Wait for the message **The payroll workbook has been saved to your Desktop**.
-5. Open `Payroll.xlsm` from your Desktop and click **Enable Content** when Excel asks about macros. The `PRSI` and `USC` modules are downloaded and the function descriptions are registered automatically.
-
-If `Payroll.xlsm` already exists on your Desktop, the script stops without changing it. Rename or move the existing file and run the script again.
-
-### Option 3: Run `setup.ps1` directly from GitHub
-
-This option does the same as Option 2, but you don't need to download any file, and Windows does not show the security warning.
-
-1. Close Excel.
-2. Open the **Start** menu, type `PowerShell`, and open **Windows PowerShell**.
-3. Paste this command and press `Enter`:
-
-   ```powershell
-   irm https://raw.githubusercontent.com/SVDotsenko/payroll/main/setup.ps1 | iex
-   ```
-
-4. Wait for the message **The payroll workbook has been saved to your Desktop**, then close the PowerShell window.
-5. Open `Payroll.xlsm` from your Desktop and click **Enable Content** when Excel asks about macros. The `PRSI` and `USC` modules are downloaded and the function descriptions are registered automatically.
-
-As with Option 2, if `Payroll.xlsm` already exists on your Desktop, the script stops without changing it.
 
 ### Using the functions
 
