@@ -1,5 +1,5 @@
 Attribute VB_Name = "USC"
-Sub RegisterUSCDescription()
+Private Sub RegisterUSCDescription()
     Application.MacroOptions _
         Macro:="USC_Charge", _
         Category:="payroll", _

@@ -49,7 +49,7 @@ UpdateFailed:
 		vbExclamation, "Payroll module updater"
 End Sub
 
-Public Sub RefreshFunctionDescriptions()
+Private Sub RefreshFunctionDescriptions()
 	On Error GoTo RegistrationFailed
 
 	For Each component In ThisWorkbook.VBProject.VBComponents
@@ -59,6 +59,8 @@ Public Sub RefreshFunctionDescriptions()
 
 			If LCase$(Left$(codeLine, 11)) = "public sub " Then
 				signature = Trim$(Mid$(codeLine, 12))
+			ElseIf LCase$(Left$(codeLine, 12)) = "private sub " Then
+				signature = Trim$(Mid$(codeLine, 13))
 			ElseIf LCase$(Left$(codeLine, 4)) = "sub " Then
 				signature = Trim$(Mid$(codeLine, 5))
 			End If

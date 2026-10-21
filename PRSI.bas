@@ -1,5 +1,5 @@
 Attribute VB_Name = "PRSI"
-Sub RegisterPRSIDescriptions()
+Private Sub RegisterPRSIDescriptions()
     Application.MacroOptions _
         Macro:="PRSI_Subclass", _
         Category:="payroll", _
