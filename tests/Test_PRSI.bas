@@ -2,9 +2,11 @@ Attribute VB_Name = "Test_PRSI"
 ' Tests for the PRSI module. Requires TestHelpers.
 ' Expected values come from "PRSI 2026 Contribution Rates and User Guide":
 ' subclasses from the table "Earnings bands and subclasses", AX charges from the table on page 3.
-' Run RunPRSITests (Alt+F8 or F5 in the VBA editor) and check the Immediate window.
+' Run RunPRSITests (Ctrl+Shift+Q, Alt+F8 or F5 in the VBA editor) and check the Immediate window.
 
 Sub RunPRSITests()
+Attribute RunPRSITests.VB_Description = "Runs the PRSI unit tests; results are printed to the Immediate window (Ctrl+G)."
+Attribute RunPRSITests.VB_ProcData.VB_Invoke_Func = "Q\n14"
     BeginTests
     Test_PRSI_Subclass_Weekly
     Test_PRSI_Subclass_Fortnightly

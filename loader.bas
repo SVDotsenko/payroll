@@ -4,6 +4,8 @@ Private Const REPO_API_URL = "https://api.github.com/repos/SVDotsenko/payroll/co
 Private Const RAW_BASE_URL = "https://raw.githubusercontent.com/SVDotsenko/payroll/main/"
 
 Public Sub UpdatePayrollModules()
+Attribute UpdatePayrollModules.VB_Description = "Re-imports payroll modules from the local repository (or GitHub if it is missing) and saves the workbook."
+Attribute UpdatePayrollModules.VB_ProcData.VB_Invoke_Func = "U\n14"
 	On Error GoTo UpdateFailed
 
 	Set components = ThisWorkbook.VBProject.VBComponents
