@@ -35,17 +35,18 @@ Attribute USC_Charge.VB_ProcData.VB_Invoke_Func = " \n20"
         End Select
     End If
 
-    Dim usc As Double, lower As Double, rate As Double ' Start and rate of the current band (none before the first pair)
+    Dim usc As Double, rate As Double ' Rate of the current band (none before the first pair)
+    remaining = GrossPay
 
     For Each band In bands
-        upper = lower + band(0) / periods ' End of the current band = start of the next one
-        If GrossPay <= upper Then Exit For ' Pay ends inside the current band
-        usc = usc + (upper - lower) * rate ' Current band is full: tax it whole, From - To
-        lower = upper
+        bandSize = band(0) / periods ' Size of the current band, known from the next pair
+        If remaining <= bandSize Then Exit For ' Pay ends inside the current band
+        usc = usc + bandSize * rate ' Current band is full: tax it whole
+        remaining = remaining - bandSize
         rate = band(1)
     Next
 
-    usc = usc + (GrossPay - lower) * rate ' Band where pay ends: from its start up to the pay
+    usc = usc + remaining * rate ' Band where pay ends: tax whatever is left
 
     USC_Charge = Application.WorksheetFunction.Round(usc, 2)
 End Function
