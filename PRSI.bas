@@ -39,15 +39,14 @@ Attribute PRSI_Subclass.VB_ProcData.VB_Invoke_Func = " \n20"
         Case Else: col = 0
     End Select
 
-    If GrossPay < Array(38, 76, 165)(col) Then Exit Function'Below the Class A threshold (this would be Class J)
-
-    Set maxPay = CreateObject("Scripting.Dictionary")'Upper limit of each subclass by frequency: weekly, fortnightly, monthly
-    maxPay("A0") = Array(352, 704, 1525)
-    maxPay("AX") = Array(424, 848, 1837)
-    maxPay("AL") = Array(552, 1104, 2392)
+    Set maxPay = CreateObject("Scripting.Dictionary")'Upper limit (exclusive) of each subclass by frequency: weekly, fortnightly, monthly
+    maxPay("") = Array(38, 76, 165)'Below the Class A threshold (this would be Class J)
+    maxPay("A0") = Array(352.01, 704.01, 1525.01)
+    maxPay("AX") = Array(424.01, 848.01, 1837.01)
+    maxPay("AL") = Array(552.01, 1104.01, 2392.01)
 
     For Each code In maxPay.Keys'Dictionary keeps insertion order
-        If GrossPay <= maxPay(code)(col) Then
+        If GrossPay < maxPay(code)(col) Then
             PRSI_Subclass = code
             Exit Function
         End If
