@@ -28,7 +28,7 @@ End Sub
 Function PRSI_Subclass(GrossPay As Double, Optional PayFrequency = 52) As String
 Attribute PRSI_Subclass.VB_Description = "Returns the Class A PRSI subclass (M, A0, AX, AL, A1). Rates and thresholds as of 30 September 2026."
 Attribute PRSI_Subclass.VB_ProcData.VB_Invoke_Func = " \n20"
-    weeks = 52 / IIf(PayFrequency = 26 Or PayFrequency = 12, PayFrequency, 52)'Weeks in the pay period: 1 = weekly, 2 = fortnightly, 52/12 = monthly
+    weeks = WeeksPerPeriod(PayFrequency)
 
     Set maxPay = CreateObject("Scripting.Dictionary")'Weekly upper limit of each subclass
     maxPay("M") = 0'No pay means nil contribution liability (Class M), must be checked first
@@ -39,7 +39,7 @@ Attribute PRSI_Subclass.VB_ProcData.VB_Invoke_Func = " \n20"
 
     For Each code In maxPay.Keys'Dictionary keeps insertion order
         limit% = maxPay(code) * weeks'Limit for the pay period, whole euros
-        If GrossPay < limit Or (GrossPay = limit And code <> "") Then'Class J limit is exclusive, the others inclusive
+        If GrossPay < limit Or GrossPay = limit And code <> "" Then'Class J limit is exclusive, the others inclusive
             PRSI_Subclass = code
             Exit Function
         End If
@@ -64,25 +64,24 @@ End Function
 Private Function PRSI_Credit(GrossPay As Double, PayFrequency) As Double
     If PRSI_Subclass(GrossPay, PayFrequency) <> "AX" Then Exit Function
 
-    weeksPerPeriod = 1
-    Select Case PayFrequency
-        Case 12
-            weeksPerPeriod = 52 / 12
-        Case 26
-            weeksPerPeriod = 2
-    End Select
+    weeks = WeeksPerPeriod(PayFrequency)
 
     Const MAX_CREDIT_WEEKLY = 12
     Const AX_LOWER_WEEKLY = 352.01
 
-    weeklyPay = GrossPay / weeksPerPeriod
-    weeklyCredit = MAX_CREDIT_WEEKLY - (weeklyPay - AX_LOWER_WEEKLY) / 6
+    weeklyCredit = MAX_CREDIT_WEEKLY - (GrossPay / weeks - AX_LOWER_WEEKLY) / 6
 
     If weeklyCredit < 0 Then weeklyCredit = 0
     If weeklyCredit > MAX_CREDIT_WEEKLY Then weeklyCredit = MAX_CREDIT_WEEKLY
 
-    PRSI_Credit =  weeksPerPeriod * Application.WorksheetFunction.Round(weeklyCredit, 2)
+    PRSI_Credit =  weeks * Application.WorksheetFunction.Round(weeklyCredit, 2)
 End Function
+
+Private Function WeeksPerPeriod(PayFrequency) As Double
+    ' 1 = weekly, 2 = fortnightly, 52/12 = monthly; any other frequency is treated as weekly
+    WeeksPerPeriod = 52 / IIf(PayFrequency = 26 Or PayFrequency = 12, PayFrequency, 52)
+End Function
+
 Function PRSI_ChargeSteps(GrossPay As Double, Optional PayFrequency = 52) As String
 Attribute PRSI_ChargeSteps.VB_Description = "Returns a step-by-step explanation of the Employee PRSI charge for Class A as text, one step per line. The last step equals the PRSI_Charge result. Rates as of 30 September 2026."
 Attribute PRSI_ChargeSteps.VB_ProcData.VB_Invoke_Func = " \n20"
@@ -107,16 +106,10 @@ Attribute PRSI_ChargeSteps.VB_ProcData.VB_Invoke_Func = " \n20"
             Text = Text & "Step " & n & ". Subclass AX: PRSI at the full rate = " & Format(GrossPay, "0.00") & " x " & Format(EE_RATE * 100, "0.0#") & "% = " & Format(fullPrsi, "0.0000") & "." & vbLf
 
             ' Number of weeks in the pay period
-            weeksPerPeriod = 1
-            Select Case PayFrequency
-                Case 12     ' Monthly
-                    weeksPerPeriod = 52 / 12
-                Case 26     ' Fortnightly
-                    weeksPerPeriod = 2
-            End Select
+            weeks = WeeksPerPeriod(PayFrequency)
 
             ' Weekly equivalent of the pay
-            weeklyPay = GrossPay / weeksPerPeriod
+            weeklyPay = GrossPay / weeks
 
             ' Weekly credit: the maximum minus one sixth of earnings above the lower limit
             excess = weeklyPay - AX_LOWER_WEEKLY
@@ -142,7 +135,7 @@ Attribute PRSI_ChargeSteps.VB_ProcData.VB_Invoke_Func = " \n20"
             Text = Text & "Step " & n & ". Weekly credit rounded to cents = " & Format(weeklyCredit, "0.00") & "." & vbLf
 
             ' Credit for the whole pay period
-            periodCredit = weeklyCredit * weeksPerPeriod
+            periodCredit = weeklyCredit * weeks
 
             ' Employee PRSI before the final checks
             prsi = fullPrsi - periodCredit
