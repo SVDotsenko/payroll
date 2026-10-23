@@ -8,6 +8,7 @@ Sub RunPRSITests()
 Attribute RunPRSITests.VB_Description = "Runs the PRSI unit tests; results are printed to the Immediate window (Ctrl+G)."
 Attribute RunPRSITests.VB_ProcData.VB_Invoke_Func = "Q\n14"
     BeginTests
+    Test_PRSI_Subclass_BelowClassA
     Test_PRSI_Subclass_Weekly
     Test_PRSI_Subclass_Fortnightly
     Test_PRSI_Subclass_Monthly
@@ -15,6 +16,18 @@ Attribute RunPRSITests.VB_ProcData.VB_Invoke_Func = "Q\n14"
     Test_PRSI_Charge_AX_Table
     Test_PRSI_Charge_GuideDiscrepancies
     EndTests
+End Sub
+
+' Class M for zero pay, and empty subclass (Class J) below the Class A threshold.
+Private Sub Test_PRSI_Subclass_BelowClassA()
+    CheckSubclass 0, 52, "M"            ' No pay means Class M
+    CheckSubclass 0, 26, "M"
+    CheckSubclass 0, 12, "M"
+    AssertEqual "M", PRSI_Subclass(0), "PRSI_Subclass(0) without frequency"
+    CheckSubclass 0.01, 52, ""          ' Smallest pay is not Class M
+    CheckSubclass 37.99, 52, ""         ' Just below the A0 lower bound
+    CheckSubclass 75.99, 26, ""
+    CheckSubclass 164.99, 12, ""
 End Sub
 
 ' Weekly bands: A0 38-352, AX 352.01-424, AL 424.01-552, A1 more than 552.

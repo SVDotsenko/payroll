@@ -28,17 +28,13 @@ End Sub
 Function PRSI_Subclass(GrossPay As Double, Optional PayFrequency = 52) As String
 Attribute PRSI_Subclass.VB_Description = "Returns the Class A PRSI subclass (M, A0, AX, AL, A1). Rates and thresholds as of 30 September 2026."
 Attribute PRSI_Subclass.VB_ProcData.VB_Invoke_Func = " \n20"
-    If GrossPay = 0 Then
-        PRSI_Subclass = "M"'No pay means nil contribution liability (Class M)
-        Exit Function
-    End If
-
     Select Case PayFrequency'Weeks in the pay period: 1 = weekly, 2 = fortnightly, 52/12 = monthly
         Case 26, 12: weeks = 52 / PayFrequency
         Case Else: weeks = 1
     End Select
 
     Set maxPay = CreateObject("Scripting.Dictionary")'Weekly upper limit of each subclass
+    maxPay("M") = 0'No pay means nil contribution liability (Class M), must be checked first
     maxPay("") = 38'Below the Class A threshold (this would be Class J)
     maxPay("A0") = 352
     maxPay("AX") = 424
