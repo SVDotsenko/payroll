@@ -33,20 +33,20 @@ Attribute PRSI_Subclass.VB_ProcData.VB_Invoke_Func = " \n20"
         Exit Function
     End If
 
-    Select Case PayFrequency'Column index: 0 = weekly, 1 = fortnightly, 2 = monthly
-        Case 26: col = 1
-        Case 12: col = 2
-        Case Else: col = 0
+    Select Case PayFrequency'Weeks in the pay period: 1 = weekly, 2 = fortnightly, 52/12 = monthly
+        Case 26, 12: weeks = 52 / PayFrequency
+        Case Else: weeks = 1
     End Select
 
-    Set maxPay = CreateObject("Scripting.Dictionary")'Upper limit (exclusive) of each subclass by frequency: weekly, fortnightly, monthly
-    maxPay("") = Array(38, 76, 165)'Below the Class A threshold (this would be Class J)
-    maxPay("A0") = Array(352.01, 704.01, 1525.01)
-    maxPay("AX") = Array(424.01, 848.01, 1837.01)
-    maxPay("AL") = Array(552.01, 1104.01, 2392.01)
+    Set maxPay = CreateObject("Scripting.Dictionary")'Weekly upper limit of each subclass
+    maxPay("") = 38'Below the Class A threshold (this would be Class J)
+    maxPay("A0") = 352
+    maxPay("AX") = 424
+    maxPay("AL") = 552
 
     For Each code In maxPay.Keys'Dictionary keeps insertion order
-        If GrossPay < maxPay(code)(col) Then
+        limit = Application.WorksheetFunction.Round(maxPay(code) * weeks, 0)'Limit for the pay period, whole euros
+        If GrossPay < limit Or (GrossPay = limit And code <> "") Then'Class J limit is exclusive, the others inclusive
             PRSI_Subclass = code
             Exit Function
         End If
