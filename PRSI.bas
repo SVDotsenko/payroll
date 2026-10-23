@@ -38,7 +38,7 @@ Attribute PRSI_Subclass.VB_ProcData.VB_Invoke_Func = " \n20"
     maxPay("AL") = 552
 
     For Each code In maxPay.Keys'Dictionary keeps insertion order
-        limit& = maxPay(code) * weeks'Limit for the pay period, whole euros
+        limit% = maxPay(code) * weeks'Limit for the pay period, whole euros
         If GrossPay < limit Or (GrossPay = limit And code <> "") Then'Class J limit is exclusive, the others inclusive
             PRSI_Subclass = code
             Exit Function
