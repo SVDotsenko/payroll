@@ -28,10 +28,7 @@ End Sub
 Function PRSI_Subclass(GrossPay As Double, Optional PayFrequency = 52) As String
 Attribute PRSI_Subclass.VB_Description = "Returns the Class A PRSI subclass (M, A0, AX, AL, A1). Rates and thresholds as of 30 September 2026."
 Attribute PRSI_Subclass.VB_ProcData.VB_Invoke_Func = " \n20"
-    Select Case PayFrequency'Weeks in the pay period: 1 = weekly, 2 = fortnightly, 52/12 = monthly
-        Case 26, 12: weeks = 52 / PayFrequency
-        Case Else: weeks = 1
-    End Select
+    weeks = 52 / IIf(PayFrequency = 26 Or PayFrequency = 12, PayFrequency, 52)'Weeks in the pay period: 1 = weekly, 2 = fortnightly, 52/12 = monthly
 
     Set maxPay = CreateObject("Scripting.Dictionary")'Weekly upper limit of each subclass
     maxPay("M") = 0'No pay means nil contribution liability (Class M), must be checked first
@@ -41,7 +38,7 @@ Attribute PRSI_Subclass.VB_ProcData.VB_Invoke_Func = " \n20"
     maxPay("AL") = 552
 
     For Each code In maxPay.Keys'Dictionary keeps insertion order
-        limit = Application.WorksheetFunction.Round(maxPay(code) * weeks, 0)'Limit for the pay period, whole euros
+        limit& = maxPay(code) * weeks'Limit for the pay period, whole euros
         If GrossPay < limit Or (GrossPay = limit And code <> "") Then'Class J limit is exclusive, the others inclusive
             PRSI_Subclass = code
             Exit Function
