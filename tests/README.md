@@ -45,9 +45,9 @@ End Sub
 
 ### On your computer, with the local repository (automatic)
 
-When the repository is cloned to `C:\repositories\payroll`, the loader imports the modules from that folder instead of GitHub. In that case it also imports every `.bas` file from `tests`. Each time you open the workbook, the latest test modules are imported along with the payroll modules.
+When the repository is cloned to `C:\repositories\payroll`, `setup.ps1` and the loader take the modules from that folder instead of GitHub. In that case they also import every `.bas` file from `tests`. Each time you [update the modules](../README.md#updating-the-modules), the latest test modules are imported along with the payroll modules.
 
-`loader.bas` does not update itself. If your workbook has an older loader, import the current `loader.bas` once by hand, as described in step 4 of [Option 1 in the main README](../README.md#option-1-set-up-the-workbook-manually).
+`loader.bas` does not update itself. If your workbook has an older loader, import the current `loader.bas` once by hand, as described in step 4 of [Option 3 in the main README](../README.md#option-3-set-up-the-workbook-manually).
 
 ### In any workbook (manual)
 

@@ -3,6 +3,9 @@ Private Const LOCAL_MODULE_FOLDER = "C:\repositories\payroll"
 Private Const REPO_API_URL = "https://api.github.com/repos/SVDotsenko/payroll/contents?ref=main"
 Private Const RAW_BASE_URL = "https://raw.githubusercontent.com/SVDotsenko/payroll/main/"
 
+' Kept at module level so asynchronous speech is not cut off when Announce returns.
+Private voice As Object
+
 Public Sub UpdatePayrollModules()
 Attribute UpdatePayrollModules.VB_Description = "Re-imports payroll modules from the local repository (or GitHub if it is missing) and saves the workbook."
 Attribute UpdatePayrollModules.VB_ProcData.VB_Invoke_Func = "U\n14"
@@ -17,16 +20,9 @@ Attribute UpdatePayrollModules.VB_ProcData.VB_Invoke_Func = "U\n14"
     Else
         Set modulePaths = DownloadRemoteModules()
         If modulePaths Is Nothing Then
-            ' Offline: keep the current modules and skip the update silently.
-            For Each component In components
-                If component.Type = 1 And StrComp(component.Name, "loader", vbTextCompare) <> 0 Then
-                    ShowUpdateStatus "Payroll modules were not updated: no internet connection. Using the current version."
-                    Exit Sub
-                End If
-            Next component
-            ' Nothing to fall back to on the very first open, so the user has to be told.
+            ' Nothing was replaced, so the current modules keep working.
             Err.Raise vbObjectError + 3, , "The payroll functions could not be downloaded. " & _
-                "Check the internet connection and reopen the workbook."
+                "Check the internet connection and try again. The current version is still in use."
         End If
     End If
 
@@ -38,14 +34,15 @@ Attribute UpdatePayrollModules.VB_ProcData.VB_Invoke_Func = "U\n14"
     Next modulePath
 
     ThisWorkbook.Save
-    Application.OnTime Now + TimeSerial(0, 0, 1), "'" & ThisWorkbook.Name & "'!RefreshFunctionDescriptions"
     If useLocalFolder Then source = "the local folder" Else source = "GitHub"
-    ShowUpdateStatus "Payroll modules updated from " & source & " (" & modulePaths.Count & " modules)."
+    ' The popup goes first: while an OnTime call is pending, its 3-second timeout does not fire.
+    ShowUpdateResult "Payroll modules updated from " & source & " (" & modulePaths.Count & " modules)."
+    Application.OnTime Now + TimeSerial(0, 0, 1), "'" & ThisWorkbook.Name & "'!RefreshFunctionDescriptions"
     Exit Sub
 
 UpdateFailed:
     errorMessage = Err.Description
-    ShowUpdateStatus "Payroll module update failed."
+    Announce "Payroll module update failed."
     MsgBox "Payroll module update failed: " & errorMessage & vbCrLf & _
         "The workbook may have partially updated modules in memory. Check the VBA project before saving.", _
         vbExclamation, "Payroll module updater"
@@ -87,29 +84,20 @@ RegistrationFailed:
         Err.Description, vbExclamation, "Payroll module updater"
 End Sub
 
-' Blinks the update result in the status bar to draw attention, then keeps it for 5 seconds.
-Private Sub ShowUpdateStatus(ByVal message As String)
-    For blinkIndex = 1 To 5
-        Application.StatusBar = message
-        WaitWithoutFreezing 0.5
-        ' A space hides the text; False would flash Excel's "Ready" instead.
-        Application.StatusBar = " "
-        WaitWithoutFreezing 0.3
-    Next blinkIndex
-
-    Application.StatusBar = message
-    Application.OnTime Now + TimeSerial(0, 0, 5), "'" & ThisWorkbook.Name & "'!ClearUpdateStatus"
+' Announces the update and shows the result in a popup that closes itself after 3 seconds.
+Private Sub ShowUpdateResult(ByVal message As String)
+    Announce "Payroll modules updated."
+    ' 0 + 64 = OK button + information icon
+    CreateObject("WScript.Shell").Popup message, 3, "Payroll module updater", 0 + 64
 End Sub
 
-Private Sub WaitWithoutFreezing(ByVal seconds As Single)
-    startTime = Timer
-    Do While Timer - startTime < seconds
-        DoEvents
-    Loop
-End Sub
-
-Private Sub ClearUpdateStatus()
-    Application.StatusBar = False
+' Speaks the text without waiting for it to finish; a missing speech engine does not fail the update.
+' SAPI is used instead of Application.Speech: after modules are imported, Application.Speech
+' holds up the popup's 3-second timeout by several seconds.
+Private Sub Announce(ByVal text As String)
+    On Error Resume Next
+    If voice Is Nothing Then Set voice = CreateObject("SAPI.SpVoice")
+    voice.Speak text, 1 ' 1 = SVSFlagsAsync
 End Sub
 
 Private Sub ReplaceStandardModule(ByVal components As Object, _

@@ -16,7 +16,7 @@ This project contains Excel automation files for calculating taxes and other pay
 
 ## Using the VBA Module in Excel
 
-You only need to set this up once per workbook. After that, the workbook downloads the latest payroll modules from GitHub every time it opens. The three options below are listed from simplest to most involved. Start with Option 1; if something does not work, try the next option.
+You only need to set this up once per workbook. Nothing runs when the workbook opens; to get the latest payroll modules later, update them by hand as described in [Updating the modules](#updating-the-modules). The three options below are listed from simplest to most involved. Start with Option 1; if something does not work, try the next option.
 
 ### Option 1: Run `setup.ps1` directly from GitHub
 
@@ -31,7 +31,7 @@ This option creates a new, ready-to-use workbook on your Desktop and turns on th
    ```
 
 4. Wait for the message **The payroll workbook has been saved to your Desktop**, then close the PowerShell window.
-5. Open `Payroll.xlsm` from your Desktop and click **Enable Content** when Excel asks about macros. The `PRSI` and `USC` modules are downloaded and the function descriptions are registered automatically.
+5. Open `Payroll.xlsm` from your Desktop and click **Enable Content** when Excel asks about macros. The `PRSI` and `USC` modules are already in the workbook.
 
 If `Payroll.xlsm` already exists on your Desktop, the script stops without changing it. Rename or move the existing file and run the script again.
 
@@ -45,7 +45,7 @@ This option does the same as Option 1, but you download the script file first an
 2. Close Excel.
 3. Right-click the downloaded `setup.ps1` and select **Run with PowerShell**. If Windows shows a security warning about a file downloaded from the internet, clear the **Always ask before opening this file** checkbox and then click **Open**. If the checkbox stays ticked, nothing happens and the workbook is not created.
 4. Wait for the message **The payroll workbook has been saved to your Desktop**.
-5. Open `Payroll.xlsm` from your Desktop and click **Enable Content** when Excel asks about macros. The `PRSI` and `USC` modules are downloaded and the function descriptions are registered automatically.
+5. Open `Payroll.xlsm` from your Desktop and click **Enable Content** when Excel asks about macros. The `PRSI` and `USC` modules are already in the workbook.
 
 As with Option 1, if `Payroll.xlsm` already exists on your Desktop, the script stops without changing it.
 
@@ -57,22 +57,14 @@ If this option does not work either, set up the workbook manually with Option 3.
 2. In Excel, go to **File > Options > Trust Center > Trust Center Settings... > Macro Settings** and tick **Trust access to the VBA project object model**. The loader needs this to update the modules.
 3. Open your workbook in the desktop version of Excel and press `Alt+F11` to open the Visual Basic Editor.
 4. Select **File > Import File...** and import the downloaded `loader.bas`.
-5. In the **Project** pane, double-click **ThisWorkbook** and paste this code:
+5. Close the editor and save the workbook as an Excel Macro-Enabled Workbook (`.xlsm`).
+6. Download the payroll modules as described in [Updating the modules](#updating-the-modules). In Excel's Insert Function wizard, the functions appear under the `payroll` category.
 
-   ```vba
-   Private Sub Workbook_Open()
-       UpdatePayrollModules
-   End Sub
-   ```
+### Updating the modules
 
-6. Close the editor and save the workbook as an Excel Macro-Enabled Workbook (`.xlsm`).
-7. Close the workbook, then open it again and enable macros when prompted. The `PRSI` and `USC` modules are downloaded and the function descriptions are registered automatically. In Excel's Insert Function wizard, the functions appear under the `payroll` category.
+The workbook does not update itself. To get the latest payroll functions, press `Ctrl+Shift+U`, or press `Alt+F8`, choose `UpdatePayrollModules`, and click **Run**. An internet connection is required. If the download fails, Excel shows a message and the current functions stay as they are.
 
 ### Using the functions
-
-When the workbook opens with an internet connection, it automatically updates the payroll functions to the latest version. Without an internet connection you can still use the workbook as usual, but the functions may not be the latest version.
-
-The very first time a new workbook is opened, an internet connection is required, because that is when the functions are downloaded for the first time. If there is no connection, Excel shows a message; connect to the internet and open the workbook again.
 
 Use the functions in worksheet formulas, for example:
 - `=PRSI_Subclass(A2,52)` returns the PRSI subclass for the pay in cell `A2`.

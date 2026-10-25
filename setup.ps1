@@ -1,5 +1,5 @@
-# Creates a new macro-enabled workbook with the payroll loader installed.
-# On every open the workbook runs UpdatePayrollModules, which pulls the latest modules.
+# Creates a new macro-enabled workbook with the loader and all payroll modules installed.
+# Nothing runs when the workbook opens; to update the modules later, run UpdatePayrollModules by hand.
 param(
 	[string]$Path = (Join-Path ([Environment]::GetFolderPath('Desktop')) 'Payroll.xlsm')
 )
@@ -14,8 +14,9 @@ trap {
 	exit 1
 }
 
-$LocalLoader = 'C:\repositories\payroll\loader.bas'
-$RemoteLoader = 'https://raw.githubusercontent.com/SVDotsenko/payroll/main/loader.bas'
+$LocalRepository = 'C:\repositories\payroll'
+$RepoApiUrl = 'https://api.github.com/repos/SVDotsenko/payroll/contents?ref=main'
+$RawBaseUrl = 'https://raw.githubusercontent.com/SVDotsenko/payroll/main/'
 $XlOpenXmlWorkbookMacroEnabled = 52
 
 function Release-ComObject($object) {
@@ -46,36 +47,60 @@ if (-not (Test-Path $securityKey)) {
 }
 Set-ItemProperty -Path $securityKey -Name AccessVBOM -Value 1 -Type DWord
 
-# Same lookup order as the loader itself: local repository first, then GitHub.
-if (Test-Path $LocalLoader) {
-	Write-Host "Using loader from $LocalLoader"
-	$loaderText = Get-Content -Path $LocalLoader -Raw
+# Same lookup order as the loader itself: the local repository (with tests) first, then GitHub (without tests).
+$moduleTexts = [ordered]@{}
+if (Test-Path $LocalRepository) {
+	Write-Host "Using modules from $LocalRepository"
+	$moduleFiles = @(Get-ChildItem -Path $LocalRepository -Filter '*.bas') +
+		@(Get-ChildItem -Path (Join-Path $LocalRepository 'tests') -Filter '*.bas' -ErrorAction SilentlyContinue)
+	foreach ($moduleFile in $moduleFiles) {
+		$moduleTexts[$moduleFile.Name] = Get-Content -Path $moduleFile.FullName -Raw
+	}
 } else {
-	Write-Host "Downloading loader from $RemoteLoader"
-	$loaderText = [string](Invoke-WebRequest -Uri $RemoteLoader -UseBasicParsing).Content
+	Write-Host 'Downloading modules from GitHub'
+	$entries = Invoke-RestMethod -Uri $RepoApiUrl -Headers @{ 'User-Agent' = 'payroll-setup' }
+	foreach ($entry in $entries | Where-Object { $_.type -eq 'file' -and $_.name -like '*.bas' }) {
+		$moduleTexts[$entry.name] = [string](Invoke-WebRequest -Uri ($RawBaseUrl + $entry.name) -UseBasicParsing).Content
+	}
+}
+if (-not $moduleTexts.Contains('loader.bas')) {
+	throw 'loader.bas was not found among the payroll modules.'
 }
 
+# Every module is collected before Excel starts, so a network failure does not leave a half-built workbook.
 # The VBA editor needs CRLF line endings to import a module correctly.
-$loaderText = $loaderText -replace "`r?`n", "`r`n"
-$tempLoader = Join-Path $env:TEMP 'loader.bas'
-[IO.File]::WriteAllText($tempLoader, $loaderText, [Text.Encoding]::ASCII)
+$moduleFolder = Join-Path $env:TEMP 'payroll_setup'
+Remove-Item -Path $moduleFolder -Recurse -Force -ErrorAction SilentlyContinue
+New-Item -ItemType Directory -Path $moduleFolder | Out-Null
+foreach ($moduleName in $moduleTexts.Keys) {
+	$moduleText = $moduleTexts[$moduleName] -replace "`r?`n", "`r`n"
+	[IO.File]::WriteAllText((Join-Path $moduleFolder $moduleName), $moduleText, [Text.Encoding]::ASCII)
+}
 
 $excel = New-Object -ComObject Excel.Application
 $workbook = $null
 $project = $null
-$thisWorkbook = $null
+$components = $null
 try {
 	$excel.Visible = $false
 	$excel.DisplayAlerts = $false
 
 	$workbook = $excel.Workbooks.Add()
 	$project = $workbook.VBProject
-	[void]$project.VBComponents.Import($tempLoader)
-
-	# CodeName is used instead of "ThisWorkbook" because localized Excel may name it differently.
-	$thisWorkbook = $project.VBComponents.Item($workbook.CodeName)
-	$thisWorkbook.CodeModule.AddFromString(
-		"Private Sub Workbook_Open()`r`n    UpdatePayrollModules`r`nEnd Sub")
+	$components = $project.VBComponents
+	$registerCalls = @()
+	foreach ($moduleName in $moduleTexts.Keys) {
+		$component = $components.Import((Join-Path $moduleFolder $moduleName))
+		# Same rule as RefreshFunctionDescriptions in the loader: every Sub named Register* is run once.
+		$pattern = '(?im)^\s*(?:(?:public|private)\s+)?sub\s+(register\w*)'
+		foreach ($match in [regex]::Matches($moduleTexts[$moduleName], $pattern)) {
+			$registerCalls += "'$($workbook.Name)'!$($component.Name).$($match.Groups[1].Value)"
+		}
+		Release-ComObject $component
+	}
+	foreach ($registerCall in $registerCalls) {
+		[void]$excel.Run($registerCall)
+	}
 
 	$workbook.SaveAs($Path, $XlOpenXmlWorkbookMacroEnabled)
 	$workbook.Close($false)
@@ -86,13 +111,13 @@ try {
 		$workbook.Close($false)
 	}
 	$excel.Quit()
-	Release-ComObject $thisWorkbook
+	Release-ComObject $components
 	Release-ComObject $project
 	Release-ComObject $workbook
 	Release-ComObject $excel
 	[GC]::Collect()
 	[GC]::WaitForPendingFinalizers()
-	Remove-Item -Path $tempLoader -ErrorAction SilentlyContinue
+	Remove-Item -Path $moduleFolder -Recurse -Force -ErrorAction SilentlyContinue
 }
 
 # Windows toast notification. WinRT types are only available in Windows PowerShell 5.1,
