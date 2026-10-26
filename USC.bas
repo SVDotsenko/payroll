@@ -46,7 +46,5 @@ Attribute USC_Charge.VB_ProcData.VB_Invoke_Func = " \n20"
         rate = band(1)
     Next
 
-    usc = usc + remaining * rate ' Band where pay ends: tax whatever is left
-
-    USC_Charge = Application.WorksheetFunction.Round(usc, 2)
+    USC_Charge = Application.WorksheetFunction.Round(usc + remaining * rate, 2)
 End Function
