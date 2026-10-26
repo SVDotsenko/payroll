@@ -64,6 +64,19 @@ If this option does not work either, set up the workbook manually with Option 3.
 
 The workbook does not update itself. To get the latest payroll functions, press `Ctrl+Shift+U`, or press `Alt+F8`, choose `UpdatePayrollModules`, and click **Run**. An internet connection is required. If the download fails, Excel shows a message and the current functions stay as they are.
 
+### Updating the loader
+
+Updating the modules does not update `loader.bas` itself. To replace the loader in an existing workbook:
+
+1. Close the workbook in Excel.
+2. Run [`update-loader.ps1`](https://github.com/SVDotsenko/payroll/blob/main/update-loader.ps1) the same way as `setup.ps1`: either paste this command into Windows PowerShell, or download the file and choose **Run with PowerShell**.
+
+   ```powershell
+   irm https://raw.githubusercontent.com/SVDotsenko/payroll/main/update-loader.ps1 | iex
+   ```
+
+3. Choose your workbook in the dialog. The script replaces the `loader` module and saves the workbook. The previous version is kept next to it as a copy with the `.bak` extension, for example `Payroll.xlsm.bak`.
+
 ### Using the functions
 
 Use the functions in worksheet formulas, for example:
