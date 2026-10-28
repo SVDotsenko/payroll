@@ -65,15 +65,7 @@ Private Function PRSI_Credit(GrossPay As Double, PayFrequency) As Double
     If PRSI_Subclass(GrossPay, PayFrequency) <> "AX" Then Exit Function
 
     weeks = WeeksPerPeriod(PayFrequency)
-
-    Const MAX_CREDIT_WEEKLY = 12
-    Const AX_LOWER_WEEKLY = 352.01
-
-    weeklyCredit = MAX_CREDIT_WEEKLY - (GrossPay / weeks - AX_LOWER_WEEKLY) / 6
-
-    If weeklyCredit < 0 Then weeklyCredit = 0
-    If weeklyCredit > MAX_CREDIT_WEEKLY Then weeklyCredit = MAX_CREDIT_WEEKLY
-
+    weeklyCredit = 12 - (GrossPay / weeks - 352.01) / 6
     PRSI_Credit =  weeks * Application.WorksheetFunction.Round(weeklyCredit, 2)
 End Function
 
